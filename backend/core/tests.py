@@ -6,7 +6,16 @@ from django.core.cache import cache
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
-from .mailbox import MailboxConnectionError, MailboxPage, _search_alias_uids
+from email.message import EmailMessage
+
+from .mailbox import (
+    MailboxConnectionError,
+    MailboxPage,
+    _format_body,
+    _plain_text,
+    _preview_text,
+    _search_alias_uids,
+)
 from .models import PendingElevatedUser
 
 
@@ -30,6 +39,30 @@ class MailboxSearchTests(APITestCase):
             'X-GM-RAW',
             '"{deliveredto:6@zoryo.uk to:6@zoryo.uk}"',
         )
+
+    def test_plain_text_body_preserves_paragraphs(self):
+        body = 'First line\r\nSecond line\r\n\r\n  Final paragraph  '
+
+        formatted = _format_body(body)
+
+        self.assertEqual(formatted, 'First line\nSecond line\n\nFinal paragraph')
+        self.assertEqual(
+            _preview_text(formatted),
+            'First line Second line Final paragraph',
+        )
+
+    def test_html_body_preserves_blocks_and_ignores_styles(self):
+        message = EmailMessage()
+        message.set_content(
+            '<html><head><style>.hidden { color: red; }</style></head>'
+            '<body><p>Hello</p><p>Second<br>line</p>'
+            '<ul><li>One</li><li>Two</li></ul></body></html>',
+            subtype='html',
+        )
+
+        formatted = _format_body(_plain_text(message))
+
+        self.assertEqual(formatted, 'Hello\n\nSecond\nline\n\n- One\n\n- Two')
 
 
 class MailApiTests(APITestCase):

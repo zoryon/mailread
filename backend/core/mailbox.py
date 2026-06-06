@@ -35,15 +35,55 @@ class MailboxPage:
 
 
 class _HTMLTextExtractor(HTMLParser):
+    BLOCK_TAGS = {
+        'address',
+        'article',
+        'blockquote',
+        'div',
+        'footer',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'header',
+        'li',
+        'p',
+        'section',
+        'table',
+        'tr',
+    }
+    IGNORED_TAGS = {'head', 'script', 'style'}
+
     def __init__(self):
         super().__init__()
         self.parts = []
+        self.ignored_depth = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.IGNORED_TAGS:
+            self.ignored_depth += 1
+        elif self.ignored_depth == 0:
+            if tag == 'br':
+                self.parts.append('\n')
+            elif tag == 'li':
+                self.parts.append('\n- ')
+            elif tag in self.BLOCK_TAGS:
+                self.parts.append('\n')
+
+    def handle_endtag(self, tag):
+        if tag in self.IGNORED_TAGS:
+            self.ignored_depth = max(self.ignored_depth - 1, 0)
+        elif self.ignored_depth == 0 and tag in self.BLOCK_TAGS:
+            self.parts.append('\n')
 
     def handle_data(self, data):
-        self.parts.append(data)
+        if self.ignored_depth == 0:
+            self.parts.append(data)
 
     def text(self):
-        return ' '.join(self.parts)
+        return ''.join(self.parts)
 
 
 def _decode_header(value):
@@ -90,7 +130,16 @@ def _plain_text(message):
     return html.unescape(parser.text())
 
 
-def _clean_text(value):
+def _format_body(value):
+    value = html.unescape(value).replace('\r\n', '\n').replace('\r', '\n')
+    lines = [
+        re.sub(r'[^\S\n]+', ' ', line).strip()
+        for line in value.split('\n')
+    ]
+    return re.sub(r'\n{3,}', '\n\n', '\n'.join(lines)).strip()
+
+
+def _preview_text(value):
     return re.sub(r'\s+', ' ', value).strip()
 
 
@@ -122,7 +171,7 @@ def _parse_message(uid, response, max_bytes, include_body=True):
         return None
 
     message = BytesParser(policy=policy.default).parsebytes(raw_message)
-    body = _clean_text(_plain_text(message))
+    body = _format_body(_plain_text(message))
     flags = imaplib.ParseFlags(metadata)
 
     return {
@@ -131,7 +180,7 @@ def _parse_message(uid, response, max_bytes, include_body=True):
         'to': _decode_header(message.get('To')),
         'subject': _decode_header(message.get('Subject')) or '(No subject)',
         'date': _iso_date(message.get('Date')),
-        'preview': body[:240],
+        'preview': _preview_text(body)[:240],
         'body': body if include_body else None,
         'unread': b'\\Seen' not in flags,
         'truncated': len(raw_message) >= max_bytes,
