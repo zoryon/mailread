@@ -36,7 +36,7 @@ User = get_user_model()
 
 def _mail_cache_key(kind, alias, value):
     alias_hash = hashlib.sha256(alias.lower().encode('utf-8')).hexdigest()
-    return f'mail:v2:{kind}:{alias_hash}:{value}'
+    return f'mail:v3:{kind}:{alias_hash}:{value}'
 
 
 @api_view(['GET'])

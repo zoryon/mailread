@@ -202,9 +202,9 @@ def _open_mailbox():
 
 
 def _search_alias_uids(client, alias):
-    # X-GM-RAW uses Gmail's search syntax and deliveredto matches the actual
-    # envelope recipient, which is the reliable discriminator for aliases.
-    query = f'"deliveredto:{alias}"'
+    # Forwarded aliases retain the alias in To, while Gmail rewrites
+    # Delivered-To to the central mailbox address.
+    query = f'"{{deliveredto:{alias} to:{alias}}}"'
     status, search_data = client.uid('search', None, 'X-GM-RAW', query)
     if status != 'OK':
         raise MailboxConnectionError('Gmail could not search the mailbox.')

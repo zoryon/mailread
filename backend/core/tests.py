@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
-from .mailbox import MailboxConnectionError, MailboxPage
+from .mailbox import MailboxConnectionError, MailboxPage, _search_alias_uids
 from .models import PendingElevatedUser
 
 
@@ -14,6 +14,22 @@ User = get_user_model()
 
 
 PASSWORD = 'A-safe-passphrase-2026!'
+
+
+class MailboxSearchTests(APITestCase):
+    def test_alias_search_matches_direct_and_forwarded_delivery(self):
+        client = Mock()
+        client.uid.return_value = ('OK', [b'10 20'])
+
+        uids = _search_alias_uids(client, '6@zoryo.uk')
+
+        self.assertEqual(uids, [b'10', b'20'])
+        client.uid.assert_called_once_with(
+            'search',
+            None,
+            'X-GM-RAW',
+            '"{deliveredto:6@zoryo.uk to:6@zoryo.uk}"',
+        )
 
 
 class MailApiTests(APITestCase):
