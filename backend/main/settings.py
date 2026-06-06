@@ -180,6 +180,19 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=20, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Mailread <no-reply@mailread.local>')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+MAIL_IMAP_HOST = config('MAIL_IMAP_HOST', default='imap.gmail.com')
+MAIL_IMAP_PORT = config('MAIL_IMAP_PORT', default=993, cast=int)
+MAIL_IMAP_USE_SSL = config('MAIL_IMAP_USE_SSL', default=True, cast=bool)
+MAIL_IMAP_USER = config('MAIL_IMAP_USER', default=EMAIL_HOST_USER)
+MAIL_IMAP_PASSWORD = config('MAIL_IMAP_PASSWORD', default=EMAIL_HOST_PASSWORD)
+MAIL_IMAP_FOLDER = config('MAIL_IMAP_FOLDER', default='INBOX')
+MAIL_IMAP_TIMEOUT = config('MAIL_IMAP_TIMEOUT', default=20, cast=int)
+MAIL_PAGE_SIZE = config('MAIL_PAGE_SIZE', default=50, cast=int)
+MAIL_LIST_MESSAGE_BYTES = config('MAIL_LIST_MESSAGE_BYTES', default=32768, cast=int)
+MAIL_MAX_MESSAGE_BYTES = config('MAIL_MAX_MESSAGE_BYTES', default=524288, cast=int)
+MAIL_LIST_CACHE_SECONDS = config('MAIL_LIST_CACHE_SECONDS', default=900, cast=int)
+MAIL_MESSAGE_CACHE_SECONDS = config('MAIL_MESSAGE_CACHE_SECONDS', default=86400, cast=int)
+MAIL_POLL_SECONDS = config('MAIL_POLL_SECONDS', default=30, cast=int)
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3002')
 ADMIN_APPROVAL_EMAIL = config('ADMIN_APPROVAL_EMAIL', default='')
 ELEVATED_USER_APPROVAL_MINUTES = config('ELEVATED_USER_APPROVAL_MINUTES', default=30, cast=int)
@@ -200,4 +213,18 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': (
+            config('MAIL_CACHE_DIR', default='').strip()
+            or str(BASE_DIR / '.mail-cache')
+        ),
+        'TIMEOUT': MAIL_LIST_CACHE_SECONDS,
+        'OPTIONS': {
+            'MAX_ENTRIES': config('MAIL_CACHE_MAX_ENTRIES', default=1000, cast=int),
+        },
+    },
 }

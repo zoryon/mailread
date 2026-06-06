@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.cache import cache
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
+from .mailbox import MailboxConnectionError, MailboxPage
 from .models import PendingElevatedUser
 
 
@@ -10,6 +14,102 @@ User = get_user_model()
 
 
 PASSWORD = 'A-safe-passphrase-2026!'
+
+
+class MailApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user('alias@zoryo.uk', PASSWORD)
+
+    @patch('core.views.get_mailbox_page')
+    def test_mail_list_uses_authenticated_user_email_as_alias(self, get_mailbox_page):
+        get_mailbox_page.return_value = MailboxPage(
+            messages=[
+                {
+                    'id': '123',
+                    'from': 'Sender <sender@example.com>',
+                    'to': self.user.email,
+                    'subject': 'Test message',
+                    'date': '2026-06-06T10:00:00+00:00',
+                    'preview': 'Message preview',
+                    'body': 'Message preview',
+                    'unread': True,
+                    'truncated': False,
+                }
+            ],
+            total=1,
+            page=1,
+            page_size=50,
+            latest_uid='123',
+        )
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get('/api/mail/?page=1&alias=someone-else@example.com')
+        cached_response = self.client.get('/api/mail/?page=1')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(cached_response.status_code, 200)
+        self.assertEqual(response.data['messages'][0]['subject'], 'Test message')
+        self.assertFalse(response.data['has_more'])
+        get_mailbox_page.assert_called_once_with(
+            alias=self.user.email,
+            page=1,
+            page_size=50,
+        )
+
+        refreshed_response = self.client.get('/api/mail/?page=1&refresh=1')
+
+        self.assertEqual(refreshed_response.status_code, 200)
+        self.assertEqual(get_mailbox_page.call_count, 2)
+
+    @patch('core.views.get_mailbox_status')
+    def test_mail_status_checks_the_authenticated_alias(self, get_status):
+        get_status.return_value = {'total': 2, 'latest_uid': '456'}
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get('/api/mail/status/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['latest_uid'], '456')
+        get_status.assert_called_once_with(self.user.email)
+
+    def test_mail_list_requires_authentication(self):
+        response = self.client.get('/api/mail/')
+
+        self.assertEqual(response.status_code, 401)
+
+    @patch('core.views.get_mailbox_page')
+    def test_mailbox_connection_errors_return_service_unavailable(self, get_mailbox_page):
+        get_mailbox_page.side_effect = MailboxConnectionError('Gmail unavailable.')
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get('/api/mail/')
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data['detail'], 'Gmail unavailable.')
+
+    @patch('core.views.get_mailbox_message')
+    def test_mail_detail_is_scoped_to_authenticated_alias_and_cached(self, get_message):
+        get_message.return_value = {
+            'id': '123',
+            'from': 'sender@example.com',
+            'to': self.user.email,
+            'subject': 'Cached message',
+            'date': None,
+            'preview': 'Preview',
+            'body': 'Full body',
+            'unread': False,
+            'truncated': False,
+        }
+        self.client.force_authenticate(user=self.user)
+
+        first_response = self.client.get('/api/mail/123/')
+        second_response = self.client.get('/api/mail/123/')
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.data['body'], 'Full body')
+        get_message.assert_called_once_with(self.user.email, '123')
 
 
 class AdminUserApiTests(APITestCase):
