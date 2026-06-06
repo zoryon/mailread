@@ -39,7 +39,7 @@ function formatDate(value: string | null) {
     return "";
   }
 
-  return new Intl.DateTimeFormat("it-IT", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
@@ -83,7 +83,7 @@ export default function MailPage() {
         const response = await fetch(`/api/mail?page=${page}${refresh}`, { cache: "no-store" });
         const data = (await response.json()) as MailResponse;
         if (!response.ok) {
-          throw new Error(data.detail || "Impossibile caricare la posta.");
+          throw new Error(data.detail || "Unable to load mail.");
         }
         if (cancelled) {
           return;
@@ -98,7 +98,7 @@ export default function MailPage() {
         }
       } catch (reason) {
         if (!cancelled) {
-          setError(reason instanceof Error ? reason.message : "Impossibile caricare la posta.");
+          setError(reason instanceof Error ? reason.message : "Unable to load mail.");
         }
       } finally {
         if (!cancelled) {
@@ -149,7 +149,7 @@ export default function MailPage() {
   }, [latestUid, mailLoading, pollIntervalMs, total, user]);
 
   const visibleMessages = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("it");
+    const normalizedQuery = query.trim().toLocaleLowerCase("en");
     if (!normalizedQuery) {
       return messages;
     }
@@ -157,7 +157,7 @@ export default function MailPage() {
     return messages.filter((message) =>
       [message.from, message.to, message.subject, message.body ?? ""]
         .join(" ")
-        .toLocaleLowerCase("it")
+        .toLocaleLowerCase("en")
         .includes(normalizedQuery),
     );
   }, [messages, query]);
@@ -190,7 +190,7 @@ export default function MailPage() {
       });
       const data = (await response.json()) as MailMessage & { detail?: string };
       if (!response.ok) {
-        throw new Error(data.detail || "Impossibile caricare il messaggio.");
+        throw new Error(data.detail || "Unable to load the message.");
       }
 
       setMessages((current) =>
@@ -198,7 +198,7 @@ export default function MailPage() {
       );
     } catch (reason) {
       setBodyError(
-        reason instanceof Error ? reason.message : "Impossibile caricare il messaggio.",
+        reason instanceof Error ? reason.message : "Unable to load the message.",
       );
     } finally {
       setBodyLoadingId(null);
@@ -234,7 +234,7 @@ export default function MailPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Workspace</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">Inbox</h2>
             <p className="mt-2 text-sm text-zinc-500">
-              Messaggi ricevuti dall&apos;alias {user.email}.
+              Messages received by the {user.email} alias.
             </p>
           </div>
           <div className="flex gap-2">
@@ -242,7 +242,7 @@ export default function MailPage() {
               <Search className="h-4 w-4 text-zinc-500" aria-hidden="true" />
               <input
                 className="min-w-0 flex-1 bg-transparent px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600"
-                placeholder="Cerca nei messaggi caricati"
+                placeholder="Search loaded messages"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -252,7 +252,7 @@ export default function MailPage() {
               onClick={refresh}
               disabled={mailLoading}
               className="flex h-11 w-11 items-center justify-center rounded-md border border-white/10 bg-[#0c1118] text-zinc-400 transition hover:text-white disabled:opacity-50"
-              aria-label="Aggiorna posta"
+              aria-label="Refresh mail"
             >
               <RefreshCw className={`h-4 w-4 ${mailLoading ? "animate-spin" : ""}`} aria-hidden="true" />
             </button>
@@ -263,7 +263,7 @@ export default function MailPage() {
           <aside className="panel-flat rounded-md p-3">
             <button className="flex h-11 w-full items-center gap-3 rounded-md bg-emerald-400/10 px-3 text-sm font-medium text-emerald-100">
               <Inbox className="h-4 w-4" aria-hidden="true" />
-              Posta in arrivo
+              Inbox
               <span className="ml-auto text-xs text-emerald-300/70">{total}</span>
             </button>
           </aside>
@@ -272,18 +272,18 @@ export default function MailPage() {
             {mailLoading ? (
               <div className="flex min-h-48 items-center justify-center gap-3 text-sm text-zinc-500">
                 <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                Caricamento posta...
+                Loading mail...
               </div>
             ) : error ? (
               <div className="p-6 text-sm text-red-300">
                 <p>{error}</p>
                 <button type="button" onClick={refresh} className="mt-3 font-semibold text-white hover:underline">
-                  Riprova
+                  Try again
                 </button>
               </div>
             ) : visibleMessages.length === 0 ? (
               <div className="p-8 text-center text-sm text-zinc-500">
-                {query ? "Nessun messaggio corrisponde alla ricerca." : "Nessun messaggio ricevuto da questo alias."}
+                {query ? "No messages match your search." : "No messages have been received by this alias."}
               </div>
             ) : (
               visibleMessages.map((message) => {
@@ -297,13 +297,13 @@ export default function MailPage() {
                     >
                       <div className={`flex items-center gap-3 text-sm ${message.unread ? "font-semibold text-white" : "text-zinc-300"}`}>
                         <MailOpen className="h-4 w-4 shrink-0 text-cyan-300" aria-hidden="true" />
-                        <span className="truncate">{message.from || "Mittente sconosciuto"}</span>
+                        <span className="truncate">{message.from || "Unknown sender"}</span>
                       </div>
                       <div className="min-w-0">
                         <h3 className={`truncate text-sm ${message.unread ? "font-semibold text-white" : "font-medium text-zinc-200"}`}>
                           {message.subject}
                         </h3>
-                        <p className="mt-1 truncate text-sm text-zinc-500">{message.preview || "Nessuna anteprima"}</p>
+                        <p className="mt-1 truncate text-sm text-zinc-500">{message.preview || "No preview available"}</p>
                       </div>
                       <p className="text-sm text-zinc-500 sm:text-right">{formatDate(message.date)}</p>
                       {expanded ? (
@@ -314,22 +314,22 @@ export default function MailPage() {
                     </button>
                     {expanded ? (
                       <div className="border-t border-white/5 bg-black/10 px-5 py-5">
-                        <p className="text-xs text-zinc-500">A: {message.to || user.email}</p>
+                        <p className="text-xs text-zinc-500">To: {message.to || user.email}</p>
                         {bodyLoadingId === message.id ? (
                           <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500">
                             <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-                            Caricamento contenuto...
+                            Loading content...
                           </div>
                         ) : bodyError ? (
                           <p className="mt-4 text-sm text-red-300">{bodyError}</p>
                         ) : (
                           <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
-                            {message.body || "Questo messaggio non contiene testo visualizzabile."}
+                            {message.body || "This message does not contain any displayable text."}
                           </p>
                         )}
                         {!bodyLoadingId && !bodyError && message.truncated ? (
                           <p className="mt-4 text-xs text-amber-300/80">
-                            Contenuto abbreviato perche il messaggio o i suoi allegati sono molto grandi.
+                            Content has been shortened because the message or its attachments are very large.
                           </p>
                         ) : null}
                       </div>
@@ -346,7 +346,7 @@ export default function MailPage() {
                 className="flex h-12 w-full items-center justify-center gap-2 border-t border-white/10 text-sm font-semibold text-emerald-200 transition hover:bg-white/[0.025] disabled:opacity-50"
               >
                 {loadingMore ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-                {loadingMore ? "Caricamento..." : "Carica altre"}
+                {loadingMore ? "Loading..." : "Load more"}
               </button>
             ) : null}
           </div>
