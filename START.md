@@ -20,7 +20,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 8002
 ```
 
 Linux/macOS Bash:
@@ -31,7 +31,7 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 8002
 ```
 
 Git Bash on Windows:
@@ -42,7 +42,7 @@ python -m venv .venv
 source .venv/Scripts/activate
 python -m pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 8002
 ```
 
 If you need an admin account:
@@ -100,7 +100,7 @@ pnpm install
 pnpm dev
 ```
 
-Next runs at `http://localhost:3000` and proxies API calls to Django through `FRONTEND_SERVER_DJANGO_API_URL`.
+Next runs at `http://localhost:3002` and proxies API calls to Django through `FRONTEND_SERVER_DJANGO_API_URL`.
 
 # Elevated Users
 

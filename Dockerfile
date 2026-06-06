@@ -5,7 +5,7 @@ LABEL com.mailread.project="mailread"
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PORT=8000
+    PORT=8002
 
 WORKDIR /app/backend
 
@@ -17,7 +17,7 @@ COPY backend/ ./
 COPY docker/backend-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 8002
 CMD ["/entrypoint.sh"]
 
 
@@ -47,7 +47,7 @@ LABEL com.mailread.project="mailread"
 
 ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
-    PORT=3000
+    PORT=3002
 
 WORKDIR /app/frontend
 
@@ -55,5 +55,5 @@ COPY --from=frontend-builder /app/frontend/public ./public
 COPY --from=frontend-builder /app/frontend/.next/standalone ./
 COPY --from=frontend-builder /app/frontend/.next/static ./.next/static
 
-EXPOSE 3000
+EXPOSE 3002
 CMD ["node", "server.js"]

@@ -78,7 +78,7 @@ Open `.env.compose.local` and keep or edit these values:
 ```text
 DOCKER_BACKEND_ENV_FILE=./backend/.env.backend.local
 FRONTEND_PUBLIC_EMAIL_DOMAINS=zoryo.uk,gmail.com
-FRONTEND_SERVER_DJANGO_API_URL=http://backend:8000
+FRONTEND_SERVER_DJANGO_API_URL=http://backend:8002
 FRONTEND_SERVER_JWT_ACCESS_SECONDS=600
 FRONTEND_SERVER_JWT_REFRESH_SECONDS=604800
 ```
@@ -141,7 +141,7 @@ Recommended local Docker example:
 SECRET_KEY=replace-with-a-long-random-secret
 DJANGO_DEBUG=False
 ALLOWED_HOSTS=localhost,127.0.0.1,backend
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:3002
 ADMIN_APPROVAL_EMAIL=
 
 DATABASE_URL=postgresql://postgres_user:postgres_password@host.docker.internal:5432/mailread
@@ -240,20 +240,20 @@ During backend startup, the backend container automatically:
 - waits for PostgreSQL to be reachable;
 - collects static files;
 - runs Django migrations;
-- starts Gunicorn on port `8000`.
+- starts Gunicorn on port `8002`.
 
 # 5. Check The App
 
 Open the frontend:
 
 ```text
-http://localhost:3000
+http://localhost:3002
 ```
 
 The backend API is exposed at:
 
 ```text
-http://localhost:8000
+http://localhost:8002
 ```
 
 Check running containers:

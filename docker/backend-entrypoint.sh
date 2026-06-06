@@ -32,6 +32,6 @@ python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 
 exec gunicorn main.wsgi:application \
-  --bind "0.0.0.0:${PORT:-8000}" \
+  --bind "0.0.0.0:${PORT:-8002}" \
   --workers "${GUNICORN_WORKERS:-3}" \
   --timeout "${GUNICORN_TIMEOUT:-60}"

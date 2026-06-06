@@ -14,7 +14,7 @@ import type { AuthUser } from "@/lib/jwt";
 const BACKEND_URL =
   process.env.FRONTEND_SERVER_DJANGO_API_URL ??
   process.env.DJANGO_API_URL ??
-  "http://127.0.0.1:8000";
+  "http://127.0.0.1:8002";
 const ACCESS_MAX_AGE = Number(
   process.env.FRONTEND_SERVER_JWT_ACCESS_SECONDS ?? process.env.JWT_ACCESS_SECONDS ?? 10 * 60,
 );

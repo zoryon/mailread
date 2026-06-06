@@ -180,7 +180,7 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=20, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Mailread <no-reply@mailread.local>')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3002')
 ADMIN_APPROVAL_EMAIL = config('ADMIN_APPROVAL_EMAIL', default='')
 ELEVATED_USER_APPROVAL_MINUTES = config('ELEVATED_USER_APPROVAL_MINUTES', default=30, cast=int)
 

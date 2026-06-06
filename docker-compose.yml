@@ -10,9 +10,9 @@ services:
       - ${DOCKER_BACKEND_ENV_FILE:-./backend/.env.backend.local}
     environment:
       EXTERNAL_DATABASE_REQUIRED: "true"
-      PORT: "8000"
+      PORT: "8002"
     ports:
-      - "8000:8000"
+      - "8002:8002"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
@@ -25,12 +25,12 @@ services:
       args:
         NEXT_PUBLIC_FRONTEND_EMAIL_DOMAINS: ${FRONTEND_PUBLIC_EMAIL_DOMAINS:-zoryo.uk,gmail.com}
     environment:
-      FRONTEND_SERVER_DJANGO_API_URL: ${FRONTEND_SERVER_DJANGO_API_URL:-http://backend:8000}
+      FRONTEND_SERVER_DJANGO_API_URL: ${FRONTEND_SERVER_DJANGO_API_URL:-http://backend:8002}
       FRONTEND_SERVER_JWT_ACCESS_SECONDS: ${FRONTEND_SERVER_JWT_ACCESS_SECONDS:-600}
       FRONTEND_SERVER_JWT_REFRESH_SECONDS: ${FRONTEND_SERVER_JWT_REFRESH_SECONDS:-604800}
       NEXT_PUBLIC_FRONTEND_EMAIL_DOMAINS: ${FRONTEND_PUBLIC_EMAIL_DOMAINS:-zoryo.uk,gmail.com}
     ports:
-      - "3000:3000"
+      - "3002:3002"
     depends_on:
       - backend
     restart: unless-stopped
